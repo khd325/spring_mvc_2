@@ -209,13 +209,13 @@ BindingResult
         if (bindingResult.hasErrors()) {
             log.info("errors = {}", bindingResult);
 
-            return "validation/v2/addForm";
+            return "validation/v3/addForm";
         }
 
         Item savedItem = itemRepository.save(item);
         redirectAttributes.addAttribute("itemId", savedItem.getId());
         redirectAttributes.addAttribute("status", true);
-        return "redirect:/validation/v2/items/{itemId}";
+        return "redirect:/validation/v3/items/{itemId}";
     }
 ```
 
@@ -306,7 +306,7 @@ BindingResult
             <div class="col">
                 <button class="w-100 btn btn-secondary btn-lg"
                         onclick="location.href='items.html'"
-                        th:onclick="|location.href='@{/validation/v2/items}'|"
+                        th:onclick="|location.href='@{/validation/v3/items}'|"
                         type="button" th:text="#{button.cancel}">취소</button>
             </div>
         </div>
@@ -383,13 +383,13 @@ BindingResult
         if (bindingResult.hasErrors()) {
             log.info("errors = {}", bindingResult);
 
-            return "validation/v2/addForm";
+            return "validation/v3/addForm";
         }
 
         Item savedItem = itemRepository.save(item);
         redirectAttributes.addAttribute("itemId", savedItem.getId());
         redirectAttributes.addAttribute("status", true);
-        return "redirect:/validation/v2/items/{itemId}";
+        return "redirect:/validation/v3/items/{itemId}";
     }
 ```
 
@@ -470,13 +470,13 @@ application.properties
         if (bindingResult.hasErrors()) {
             log.info("errors = {}", bindingResult);
 
-            return "validation/v2/addForm";
+            return "validation/v3/addForm";
         }
 
         Item savedItem = itemRepository.save(item);
         redirectAttributes.addAttribute("itemId", savedItem.getId());
         redirectAttributes.addAttribute("status", true);
-        return "redirect:/validation/v2/items/{itemId}";
+        return "redirect:/validation/v3/items/{itemId}";
     }
 ```
 
@@ -545,13 +545,13 @@ target=Item(id=null, itemName=, price=null, quantity=null)
         if (bindingResult.hasErrors()) {
             log.info("errors = {}", bindingResult);
 
-            return "validation/v2/addForm";
+            return "validation/v3/addForm";
         }
 
         Item savedItem = itemRepository.save(item);
         redirectAttributes.addAttribute("itemId", savedItem.getId());
         redirectAttributes.addAttribute("status", true);
-        return "redirect:/validation/v2/items/{itemId}";
+        return "redirect:/validation/v3/items/{itemId}";
     }
 ```
 
@@ -789,7 +789,7 @@ public class ItemValidator implements Validator {
 ```java
 @Slf4j
 @Controller
-@RequestMapping("/validation/v2/items")
+@RequestMapping("/validation/v3/items")
 @RequiredArgsConstructor
 public class ValidationItemControllerV2 {
 
@@ -804,13 +804,13 @@ public class ValidationItemControllerV2 {
     if (bindingResult.hasErrors()) {
       log.info("errors = {}", bindingResult);
 
-      return "validation/v2/addForm";
+      return "validation/v3/addForm";
     }
 
     Item savedItem = itemRepository.save(item);
     redirectAttributes.addAttribute("itemId", savedItem.getId());
     redirectAttributes.addAttribute("status", true);
-    return "redirect:/validation/v2/items/{itemId}";
+    return "redirect:/validation/v3/items/{itemId}";
   }
 }
 ```
@@ -830,7 +830,7 @@ Validator 분리1에선 검증기를 직접 불러 사용했는데 `Validator`�
 ```java
 @Slf4j
 @Controller
-@RequestMapping("/validation/v2/items")
+@RequestMapping("/validation/v3/items")
 @RequiredArgsConstructor
 public class ValidationItemControllerV2 {
 
@@ -849,13 +849,13 @@ public class ValidationItemControllerV2 {
 
     if (bindingResult.hasErrors()) {
       log.info("errors = {}", bindingResult);
-      return "validation/v2/addForm";
+      return "validation/v3/addForm";
     }
 
     Item savedItem = itemRepository.save(item);
     redirectAttributes.addAttribute("itemId", savedItem.getId());
     redirectAttributes.addAttribute("status", true);
-    return "redirect:/validation/v2/items/{itemId}";
+    return "redirect:/validation/v3/items/{itemId}";
   }
 }
 ```
