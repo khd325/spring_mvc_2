@@ -726,3 +726,145 @@ typeMismatch=타입 오류입니다.
 ```
 
 errors.properties에 위 메시지를 추가하면 웹 페이지에서 메시지 코드를 찾아서 출력해준다.
+
+---
+
+## Validator 분리
+
+컨트롤러에서 검증 로직이 차지하는 부분이 매우 커서 별도의 클래스를 만들어 역할을 분리한다.
+
+---
+
+```java
+package hello.itemservice.web.validation;
+
+import hello.itemservice.domain.item.Item;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
+
+@Component
+public class ItemValidator implements Validator {
+
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return Item.class.isAssignableFrom(clazz);
+        //item == clazz
+        //item == subItem
+    }
+
+    @Override
+    public void validate(Object target, Errors errors) {
+        Item item = (Item) target;
+
+        if (!StringUtils.hasText(item.getItemName())) {
+            errors.rejectValue("itemName","required");
+        }
+
+        if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+            errors.rejectValue("price","range",new Object[]{1000,1000000},null);
+
+        }
+        if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+            errors.rejectValue("quantity","max",new Object[]{9999},null);
+        }
+
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+
+            if (resultPrice < 10000) {
+                errors.reject("totalPriceMin",new Object[]{10000,resultPrice},null);
+            }
+        }
+
+    }
+}
+```
+
+`supprots()` 해당 검증기를 지원하는 여부 확인
+
+`validate(Object target, Errors errors)` 검증 대상 객체와 BindingResult
+
+```java
+@Slf4j
+@Controller
+@RequestMapping("/validation/v2/items")
+@RequiredArgsConstructor
+public class ValidationItemControllerV2 {
+
+  private final ItemRepository itemRepository;
+  private final ItemValidator itemValidator;
+
+  @PostMapping("/add")
+  public String addItemV5(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+
+    itemValidator.validate(item, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      log.info("errors = {}", bindingResult);
+
+      return "validation/v2/addForm";
+    }
+
+    Item savedItem = itemRepository.save(item);
+    redirectAttributes.addAttribute("itemId", savedItem.getId());
+    redirectAttributes.addAttribute("status", true);
+    return "redirect:/validation/v2/items/{itemId}";
+  }
+}
+```
+
+ItemValidator를 ComponentScan 대상으로 지정하고 Controller에서 의존관계를 주입한다.
+
+`validate` 로직 한 줄로 검증을 끝낸다. 검증에 실패하면 bindingReuslt에 담기기 때문에 실패 시 addForm 템플릿 뷰를 반환한다.
+
+---
+
+## Validator 분리2
+
+Validator 분리1에선 검증기를 직접 불러 사용했는데 `Validator`인터페이스를 사용해서 검증기를 만들면 스프링의 추가적인 도움을 받을 수 있다.
+
+---
+
+```java
+@Slf4j
+@Controller
+@RequestMapping("/validation/v2/items")
+@RequiredArgsConstructor
+public class ValidationItemControllerV2 {
+
+  private final ItemRepository itemRepository;
+  private final ItemValidator itemValidator;
+
+  @InitBinder
+  public void init(WebDataBinder dataBinder) {
+    dataBinder.addValidators(itemValidator);
+  }
+
+
+  @PostMapping("/add")
+  public String addItemV6(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+
+
+    if (bindingResult.hasErrors()) {
+      log.info("errors = {}", bindingResult);
+      return "validation/v2/addForm";
+    }
+
+    Item savedItem = itemRepository.save(item);
+    redirectAttributes.addAttribute("itemId", savedItem.getId());
+    redirectAttributes.addAttribute("status", true);
+    return "redirect:/validation/v2/items/{itemId}";
+  }
+}
+```
+
+`validator`를 직접 호출하지 않고 `@InitBinder`애노테이션을 사용한다.
+
+`WebDataBinder`에 검증기를 추가하면 해당 컨트롤러가 호출될때마다 실행된다.
+
+`public String addItemV6(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes)`
+
+`@Validated` 애노테이션이 추가됐다. 이 애노테이션이 붙으면 `WebDataBinder`에 등록한 검증기를 찾아서 실행한다. 검증기가 여러개 등록되어있어서 구분이 필요한데 이 때 `supports`가 호출된다.
+
