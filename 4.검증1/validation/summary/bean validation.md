@@ -659,7 +659,7 @@ public class ValidationItemApiController {
 
 `HttpMessageConverter`는 JSON을 `Item`객체로 생성하는데 실패한다.
 
-`price` 필드에 문자를 넣는 요청같은 경우에 `Item`객체 자체를 만들지 못해서 컨트롤러가 호출되지 못하고 예외갑 ㅏㄹ생한다.
+`price` 필드에 문자를 넣는 요청같은 경우에 `Item`객체 자체를 만들지 못해서 컨트롤러가 호출되지 못하고 예외가 발생한다.
 
 
 ### @ModelAttribute Vs @RequestBody
